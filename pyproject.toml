@@ -1,0 +1,36 @@
+[project]
+name = "vigil"
+version = "0.1.0"
+description = "Visual Intelligence Graph & Inference Layer"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.7",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "psycopg[binary]>=3.1",
+  "openai>=1.30",
+  "faiss-cpu>=1.8",
+  "opencv-python-headless>=4.9",
+  "ultralytics>=8.2",
+  "numpy>=1.26",
+  "prometheus-client>=0.20",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.2", "ruff>=0.5", "mypy>=1.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

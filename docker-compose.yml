@@ -1,0 +1,31 @@
+services:
+  vigil-api:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    env_file: .env
+    ports: ["8000:8000", "9000:9000"]
+    depends_on: [postgres, freellmapi]
+    volumes: ["./vision/models:/app/vision/models"]
+  vigil-web:
+    build: { context: ./web }
+    ports: ["5173:5173"]
+    depends_on: [vigil-api]
+  freellmapi:
+    image: ghcr.io/tashfeenahmed/freellmapi:latest
+    ports: ["8080:8080"]
+    environment: ["FREELLMAPI_MASTER_KEY=${VIGIL_LLM_TOKEN}"]
+    volumes: ["freellmapi_data:/data"]
+  postgres:
+    image: postgres:16-alpine
+    environment: ["POSTGRES_USER=vigil", "POSTGRES_PASSWORD=vigil", "POSTGRES_DB=vigil"]
+    volumes: ["pg_data:/var/lib/postgresql/data"]
+  prometheus:
+    image: prom/prometheus:latest
+    volumes: ["./docker/prometheus.yml:/etc/prometheus/prometheus.yml"]
+    ports: ["9090:9090"]
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+volumes:
+  freellmapi_data:
+  pg_data:

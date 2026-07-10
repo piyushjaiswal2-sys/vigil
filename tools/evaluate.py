@@ -83,7 +83,30 @@ def average_precision(confidences: list[float], is_tp: list[bool], n_gt: int) ->
 # dataset
 # --------------------------------------------------------------------------- #
 def load_dataset(data: str):
-    """Resolve a YOLO dataset yaml to (image_paths, names) via ultralytics."""
+    """Resolve a YOLO dataset to (image_paths, names).
+
+    A repo-local dataset yaml (e.g. the bundled `datasets/coco128.yaml`) is
+    read directly, so evaluation runs fully offline with no download. Anything
+    else is handed to ultralytics, which resolves/downloads as needed.
+    """
+    import yaml
+
+    local = Path(data)
+    if not local.is_absolute():
+        local = REPO_ROOT / data
+    if local.exists() and local.suffix in (".yaml", ".yml"):
+        info = yaml.safe_load(local.read_text(encoding="utf-8"))
+        root = Path(info.get("path", ".")).expanduser()
+        if not root.is_absolute():
+            root = (REPO_ROOT / root).resolve()
+        val_dir = root / (info.get("val") or info.get("train"))
+        images = sorted(p for p in val_dir.rglob("*") if p.suffix.lower() in IMG_EXTS)
+        if images:
+            names = info["names"]
+            if not isinstance(names, dict):
+                names = dict(enumerate(names))
+            return images, names
+
     from ultralytics.data.utils import check_det_dataset
 
     info = check_det_dataset(data)
@@ -219,8 +242,13 @@ def evaluate_pipeline(images, names, model, conf, imgsz, iou_thr):
 def official_val(model, data, conf, imgsz):
     from ultralytics import YOLO
 
-    res = YOLO(model).val(data=data, conf=conf, imgsz=imgsz, device="cpu",
-                          verbose=False, plots=False)
+    try:
+        res = YOLO(model).val(data=data, conf=conf, imgsz=imgsz, device="cpu",
+                              verbose=False, plots=False)
+    except Exception:
+        # Local yaml may not resolve inside ultralytics; use its bundled name.
+        res = YOLO(model).val(data="coco128.yaml", conf=conf, imgsz=imgsz,
+                              device="cpu", verbose=False, plots=False)
     b = res.box
     return {
         "mAP@0.5": round(float(b.map50), 4),
@@ -233,7 +261,7 @@ def official_val(model, data, conf, imgsz):
 def main() -> int:
     ap = argparse.ArgumentParser(description="Evaluate VIGIL detection on a public dataset")
     ap.add_argument("--model", default="yolov8n.pt")
-    ap.add_argument("--data", default="coco128.yaml")
+    ap.add_argument("--data", default="datasets/coco128.yaml")
     ap.add_argument("--conf", type=float, default=0.25)
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--iou", type=float, default=0.5, help="IoU threshold for TP match")

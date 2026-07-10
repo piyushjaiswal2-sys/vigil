@@ -175,7 +175,7 @@ def main() -> int:
     adj = Adjudicator(provider=provider)
 
     print("[reason] A: live integration on COCO128 detections ...")
-    live = eval_live(adj, "coco128.yaml", "yolov8n.pt", sample=12)
+    live = eval_live(adj, "datasets/coco128.yaml", "yolov8n.pt", sample=12)
     print(f"[reason]   {json.dumps({k: v for k, v in live.items() if k != 'samples'})}")
 
     print("[reason] B: risk-scoring on labelled scenarios ...")

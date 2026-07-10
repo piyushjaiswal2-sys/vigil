@@ -19,7 +19,9 @@ vision/models/*.pt
 # YOLO weights auto-downloaded at eval time
 *.pt
 data/
-datasets/
+# datasets are bundled for offline eval; only ignore caches/archives
+datasets/**/*.cache
+*.zip
 *.faiss
 
 # Logs & db

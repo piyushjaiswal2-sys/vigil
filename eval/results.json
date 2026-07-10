@@ -1,6 +1,6 @@
 {
   "model": "yolov8n.pt",
-  "dataset": "coco128.yaml",
+  "dataset": "datasets/coco128.yaml",
   "conf": 0.25,
   "imgsz": 640,
   "iou_match": 0.5,
@@ -16,8 +16,8 @@
     "recall": 0.5005,
     "f1": 0.592,
     "mAP@0.5": 0.4875,
-    "mean_latency_ms": 80.05,
-    "fps": 12.49
+    "mean_latency_ms": 66.24,
+    "fps": 15.1
   },
   "ultralytics_official": {
     "mAP@0.5": 0.4682,

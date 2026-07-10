@@ -156,7 +156,7 @@ evaluated against a live LLM endpoint (see [Reasoning layer](#reasoning-layer-s4
 | Hardware | Intel Core i5-1155G7 @ 2.50 GHz, CPU only (no GPU) |
 | Runtime | Python 3.13.5, torch 2.13.0+cpu, ultralytics 8.4.91 |
 | Detector | YOLOv8n (3.15 M params, 8.7 GFLOPs) |
-| Dataset | COCO128 (128 images, 929 instances, 71 of 80 classes present) |
+| Dataset | COCO128 (128 images, 929 instances, 71 of 80 classes present), bundled at [`datasets/coco128/`](./datasets/coco128) so the eval runs offline |
 | Operating point | conf = 0.25, imgsz = 640, TP match at IoU ≥ 0.5 |
 
 ### Detection results
@@ -175,7 +175,7 @@ classes here, versus COCO 101-point over all 80 classes in ultralytics).
 | mAP@0.5:0.95 | — | 0.364 |
 
 Counts over 128 images: TP 465, FP 177, FN 464 (929 ground-truth instances).
-Throughput on CPU (single stream, steady-state): 80.05 ms/frame, 12.49 FPS.
+Throughput on CPU (single stream, steady-state): 66.24 ms/frame, 15.1 FPS.
 
 ### Test suite
 
@@ -198,7 +198,7 @@ python -m venv .venv && .venv/Scripts/activate      # Windows; else: source .ven
 pip install pytest pyyaml ultralytics               # ultralytics pulls torch + opencv (CPU)
 pytest -q
 python tools/validate.py
-python tools/evaluate.py --model yolov8n.pt --data coco128.yaml   # downloads COCO128
+python tools/evaluate.py                            # uses bundled datasets/coco128 (offline)
 # quick smoke: python tools/evaluate.py --limit 32 --skip-official
 
 # reasoning layer (needs a key in .env: FREELLMAPI_BASE_URL / _API_KEY / _MODEL)
@@ -274,6 +274,7 @@ vigil/
 ├─ server/      # L4 FastAPI app, routes, schemas
 ├─ frontend/    # L4 dashboard
 ├─ config/      # settings + pipeline.yaml (S0–S3 DAG)
+├─ datasets/    # bundled COCO128 (images + labels) + coco128.yaml
 ├─ tools/       # validate.py, evaluate.py, eval_reasoning.py
 ├─ tests/       # pytest suites
 ├─ eval/        # evaluation output (results.json, reasoning_results.json)

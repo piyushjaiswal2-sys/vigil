@@ -25,6 +25,29 @@ from engines.types import RiskEvent, ValidatedDetections
 logger = logging.getLogger("vigil.agent.freellmapi")
 
 
+def _extract_json(content: str) -> dict:
+    """Parse a JSON object from an LLM reply.
+
+    Instruct models routinely wrap JSON in ```json ... ``` fences or add
+    surrounding prose, which breaks a naive json.loads. This strips fences and
+    falls back to the outermost {...} span so the reasoning path is not thrown
+    onto the heuristic fallback by cosmetic formatting.
+    """
+    text = content.strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text[:4].lower() == "json":
+            text = text[4:]
+        text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start, end = text.find("{"), text.rfind("}")
+        if start != -1 and end > start:
+            return json.loads(text[start:end + 1])
+        raise
+
+
 @dataclass
 class FreeLlmApiConfig:
     """Runtime config for the freellmapi provider."""
@@ -90,7 +113,12 @@ class FreeLlmApiProvider:
                 "temperature": 0.2,
             }
         ).encode()
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            # Cloudflare-fronted gateways (freellmapi.co, Groq, ...) reject the
+            # default urllib User-Agent with a 1010 block, so set an explicit one.
+            "User-Agent": "vigil/0.1",
+        }
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
         req = urllib.request.Request(url, data=body, headers=headers)
@@ -105,7 +133,7 @@ class FreeLlmApiProvider:
     ) -> RiskEvent:
         try:
             content = payload["choices"][0]["message"]["content"]
-            data = json.loads(content)
+            data = _extract_json(content)
             return RiskEvent(
                 frame_index=detections.frame_index,
                 risk=float(max(0.0, min(1.0, data["risk"]))),

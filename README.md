@@ -139,8 +139,9 @@ curl -X POST localhost:8000/v1/analyze \
 
 The detection stage was evaluated by wiring a real YOLOv8 backend into
 `DetectBlock` and running the `DetectBlock → ValidateBlock` path over a public
-dataset. All numbers are reproducible offline (no API keys required); raw output
-is written to [`eval/results.json`](./eval/results.json).
+dataset; these numbers are reproducible offline with no API keys (raw output in
+[`eval/results.json`](./eval/results.json)). The reasoning stage was then
+evaluated against a live LLM endpoint (see [Reasoning layer](#reasoning-layer-s4)).
 
 ### Setup
 
@@ -193,15 +194,48 @@ pytest -q
 python tools/validate.py
 python tools/evaluate.py --model yolov8n.pt --data coco128.yaml   # downloads COCO128
 # quick smoke: python tools/evaluate.py --limit 32 --skip-official
+
+# reasoning layer (needs a key in .env: FREELLMAPI_BASE_URL / _API_KEY / _MODEL)
+python tools/eval_reasoning.py
 ```
 
-### Reasoning layer
+### Reasoning layer (S4)
 
-The scores above cover detection only. The reasoning layer (S4) routes through
-freellmapi and was run in heuristic-fallback mode, since scoring it requires a
-live endpoint and provider keys. Wiring a real endpoint is a config-only change
-(`FREELLMAPI_BASE_URL` / `FREELLMAPI_API_KEY`); reasoning-quality scores can be
-added once keys are supplied.
+The reasoning layer was evaluated against a live OpenAI-compatible endpoint —
+Groq `llama-3.3-70b-versatile` used directly as the provider. A self-hosted
+freellmapi gateway exposes the identical `/v1` contract, so this is a
+config-only difference (`FREELLMAPI_BASE_URL` / `FREELLMAPI_API_KEY` /
+`FREELLMAPI_MODEL`). Raw output: [`eval/reasoning_results.json`](./eval/reasoning_results.json).
+
+Live integration: YOLOv8 detections from 12 COCO128 frames, adjudicated by the LLM.
+
+| Metric | Value |
+|---|:---:|
+| LLM success rate | 12 / 12 (100%) |
+| Mean reasoning latency | 848 ms / call |
+| Heuristic fallbacks | 0 |
+
+Risk-scoring: 10 labelled scenarios (5 clearly risky, 5 clearly safe), scored
+against a 0.5 risk threshold.
+
+| Metric | Value |
+|---|:---:|
+| Accuracy | 10 / 10 (100%) |
+| Risky scenarios | risk 0.80–0.90 |
+| Safe scenarios | risk 0.00 |
+
+Sample outputs: person holding a knife in a store → risk 0.90, label "Threat";
+truck on an active runway → risk 0.90, label "Incursion"; cat on a sofa → risk
+0.00, label "Pet"; person + umbrella on a street → risk 0.45, label "Person".
+
+Making this path work required two fixes in `agent/freellmapi_client.py`, both
+found during evaluation:
+
+- The client sent no `User-Agent`, so Cloudflare-fronted gateways (Groq, and
+  freellmapi.co itself) rejected every call with a 1010 block.
+- `_parse` ran `json.loads` on the raw reply, so any model that wrapped its JSON
+  in a Markdown code fence (most instruct models do) silently fell back to the
+  heuristic. Parsing now strips fences and extracts the JSON object.
 
 ## Repository layout
 
@@ -214,9 +248,9 @@ vigil/
 ├─ server/      # L4 FastAPI app, routes, schemas
 ├─ frontend/    # L4 dashboard
 ├─ config/      # settings + pipeline.yaml (S0–S3 DAG)
-├─ tools/       # validate.py, evaluate.py
+├─ tools/       # validate.py, evaluate.py, eval_reasoning.py
 ├─ tests/       # pytest suites
-├─ eval/        # evaluation output (results.json)
+├─ eval/        # evaluation output (results.json, reasoning_results.json)
 └─ .github/     # CI: pytest + ruff
 ```
 
@@ -246,7 +280,8 @@ stub path so the graph stays importable and testable without a GPU.
 | L4 server / frontend | Done |
 | Config / CI | Done |
 | Tests | 14 / 14 |
-| Evaluation (YOLOv8 on COCO128) | Done, see [Evaluation](#evaluation) |
+| Detection eval (YOLOv8 on COCO128) | Done, see [Evaluation](#evaluation) |
+| Reasoning eval (live LLM) | Done, see [Evaluation](#evaluation) |
 
 ## License and attribution
 

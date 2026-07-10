@@ -1,0 +1,184 @@
+{
+  "endpoint": "https://api.groq.com/openai",
+  "model": "llama-3.3-70b-versatile",
+  "threshold": 0.5,
+  "live_integration": {
+    "frames_scored": 12,
+    "llm_success_rate": 1.0,
+    "mean_latency_ms": 848.1,
+    "samples": [
+      {
+        "image": "000000000009.jpg",
+        "detections": [
+          "bowl",
+          "broccoli",
+          "hot dog"
+        ],
+        "risk": 0.0,
+        "label": "Food",
+        "summary": "Multiple food items and bowls are detected in the scene with no apparent security risk.",
+        "provider": "freellmapi"
+      },
+      {
+        "image": "000000000025.jpg",
+        "detections": [
+          "giraffe"
+        ],
+        "risk": 0.0,
+        "label": "Giraffe",
+        "summary": "Two giraffes have been detected in the monitored area with high and low confidence levels respectively.",
+        "provider": "freellmapi"
+      },
+      {
+        "image": "000000000030.jpg",
+        "detections": [
+          "potted plant",
+          "vase"
+        ],
+        "risk": 0.0,
+        "label": "None",
+        "summary": "No security risks detected, only a vase and potted plant are present in the scene.",
+        "provider": "freellmapi"
+      },
+      {
+        "image": "000000000034.jpg",
+        "detections": [
+          "zebra"
+        ],
+        "risk": 0.0,
+        "label": "zebra",
+        "summary": "A zebra has been detected in the camera feed with high confidence.",
+        "provider": "freellmapi"
+      },
+      {
+        "image": "000000000036.jpg",
+        "detections": [
+          "person",
+          "umbrella"
+        ],
+        "risk": 0.45,
+        "label": "Person",
+        "summary": "A person with high confidence and an umbrella with moderate confidence have been detected in the camera feed.",
+        "provider": "freellmapi"
+      },
+      {
+        "image": "000000000042.jpg",
+        "detections": [
+          "dog",
+          "teddy bear"
+        ],
+        "risk": 0.0,
+        "label": "Animal",
+        "summary": "A teddy bear and a dog have been detected in the camera feed with moderate confidence levels.",
+        "provider": "freellmapi"
+      }
+    ]
+  },
+  "risk_scoring": {
+    "n": 10,
+    "accuracy": 1.0,
+    "llm_used": 10,
+    "rows": [
+      {
+        "scenario": "armed_intruder",
+        "expected": "high",
+        "risk": 0.9,
+        "predicted": "high",
+        "correct": true,
+        "label": "Threat",
+        "provider": "freellmapi",
+        "latency_ms": 603.6
+      },
+      {
+        "scenario": "perimeter_breach",
+        "expected": "high",
+        "risk": 0.9,
+        "predicted": "high",
+        "correct": true,
+        "label": "Intrusion",
+        "provider": "freellmapi",
+        "latency_ms": 555.9
+      },
+      {
+        "scenario": "crowd_surge",
+        "expected": "high",
+        "risk": 0.8,
+        "predicted": "high",
+        "correct": true,
+        "label": "Crowd Surge",
+        "provider": "freellmapi",
+        "latency_ms": 733.1
+      },
+      {
+        "scenario": "runway_incursion",
+        "expected": "high",
+        "risk": 0.9,
+        "predicted": "high",
+        "correct": true,
+        "label": "Incursion",
+        "provider": "freellmapi",
+        "latency_ms": 665.7
+      },
+      {
+        "scenario": "weapon_in_school",
+        "expected": "high",
+        "risk": 0.9,
+        "predicted": "high",
+        "correct": true,
+        "label": "Threat",
+        "provider": "freellmapi",
+        "latency_ms": 761.4
+      },
+      {
+        "scenario": "empty_office",
+        "expected": "low",
+        "risk": 0.0,
+        "predicted": "low",
+        "correct": true,
+        "label": "Idle",
+        "provider": "freellmapi",
+        "latency_ms": 847.2
+      },
+      {
+        "scenario": "pet_at_home",
+        "expected": "low",
+        "risk": 0.0,
+        "predicted": "low",
+        "correct": true,
+        "label": "Pet",
+        "provider": "freellmapi",
+        "latency_ms": 798.2
+      },
+      {
+        "scenario": "desk_work",
+        "expected": "low",
+        "risk": 0.0,
+        "predicted": "low",
+        "correct": true,
+        "label": "Normal",
+        "provider": "freellmapi",
+        "latency_ms": 671.7
+      },
+      {
+        "scenario": "quiet_park",
+        "expected": "low",
+        "risk": 0.0,
+        "predicted": "low",
+        "correct": true,
+        "label": "Bird",
+        "provider": "freellmapi",
+        "latency_ms": 760.9
+      },
+      {
+        "scenario": "clear_hallway",
+        "expected": "low",
+        "risk": 0.0,
+        "predicted": "low",
+        "correct": true,
+        "label": "Clear",
+        "provider": "freellmapi",
+        "latency_ms": 759.5
+      }
+    ]
+  }
+}

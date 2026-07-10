@@ -127,12 +127,18 @@ python tools/validate.py                            # validate blocks + DAG
 uvicorn server.app:create_app --factory --reload    # serve the API
 ```
 
-Headless analyze call:
+Analyze call — the endpoint scores a frame's detections through the reasoning
+layer and returns a `RiskEvent`:
 
 ```bash
 curl -X POST localhost:8000/v1/analyze \
   -H "Content-Type: application/json" \
-  -d '{"workflow":"perimeter_safety","source":"rtsp://cam-1/stream"}'
+  -d '{"frame_index":7,
+       "detections":[{"label":"person","confidence":0.94,"bbox":[10,10,120,300]},
+                     {"label":"knife","confidence":0.81,"bbox":[60,120,110,200]}],
+       "note":"camera near the vault"}'
+# -> {"event":{"frame_index":7,"risk":0.92,"label":"Threat","summary":"..."},
+#     "sanitized":false,"used_fallback":false}   (risk 0.92 with the LLM backend)
 ```
 
 ## Evaluation
@@ -237,6 +243,26 @@ found during evaluation:
   in a Markdown code fence (most instruct models do) silently fell back to the
   heuristic. Parsing now strips fences and extracts the JSON object.
 
+### Serving layer (S4 over HTTP)
+
+The FastAPI app was booted under uvicorn and exercised over HTTP.
+
+| Endpoint | Result |
+|---|---|
+| `GET /` | 200, service metadata |
+| `GET /v1/health` | 200, reports the active backend (`heuristic` or `freellmapi`) |
+| `POST /v1/analyze` | 200, scores supplied detections into a `RiskEvent` |
+
+With the live LLM backend, `POST /v1/analyze` on a person + knife frame returned
+risk 0.92, label "Threat"; with no backend it returns the heuristic score. A
+prompt-injection `note` is sanitized end to end (`sanitized: true`). Two
+accuracy notes from this check: the implemented server surface is exactly `/`,
+`/v1/health`, and `/v1/analyze` — the WebSocket stream, audit log, and storage
+shown in the architecture diagram are not implemented in this reference; and
+`/v1/analyze` scores caller-supplied detections (it is a reasoning endpoint, not
+an RTSP-workflow runner), so the earlier quickstart `{workflow, source}` example
+was corrected to the real request schema.
+
 ## Repository layout
 
 ```text
@@ -277,7 +303,8 @@ stub path so the graph stays importable and testable without a GPU.
 | L1 core / L2 graph | Done |
 | L3 engines (S0–S3) | Done |
 | L5 agent (freellmapi + safety) | Done |
-| L4 server / frontend | Done |
+| L4 server API | Verified over HTTP (`/`, `/v1/health`, `/v1/analyze`) |
+| L4 frontend / WebSocket / storage | Not implemented in this reference |
 | Config / CI | Done |
 | Tests | 14 / 14 |
 | Detection eval (YOLOv8 on COCO128) | Done, see [Evaluation](#evaluation) |

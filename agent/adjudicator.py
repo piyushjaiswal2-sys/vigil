@@ -43,9 +43,12 @@ class Adjudicator:
     used_fallback = self._provider is None
     if self._provider is None:
       event = RiskEvent(
+        frame_index=detections.frame_index,
         risk=heuristic_risk(detections),
         label="heuristic",
         summary="No reasoning backend configured; used heuristic risk.",
+        detections=detections.items,
+        meta={"provider": "heuristic"},
       )
     else:
       event = self._provider.adjudicate(detections, context)

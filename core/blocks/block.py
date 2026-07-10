@@ -40,8 +40,12 @@ class Block(ABC):
     inputs: tuple[PortSpec, ...] = ()
     outputs: tuple[PortSpec, ...] = ()
 
-    def __init__(self, **config: Any) -> None:
-        self.config = config
+    def __init__(self, config: dict[str, Any] | None = None, **overrides: Any) -> None:
+        # Accept both conventions used across the codebase:
+        #   - explicit dict:  Block(config={"width": 320})   (tests, direct use)
+        #   - keyword splat:  create("capture", width=320)   (graph build path)
+        # Keyword overrides win over matching keys in the config dict.
+        self.config = {**(config or {}), **overrides}
 
     @abstractmethod
     def run(self, inputs: dict[str, Any]) -> BlockResult:

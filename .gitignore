@@ -16,7 +16,10 @@ npm-debug.log*
 
 # Models & data (user-supplied)
 vision/models/*.pt
+# YOLO weights auto-downloaded at eval time
+*.pt
 data/
+datasets/
 *.faiss
 
 # Logs & db

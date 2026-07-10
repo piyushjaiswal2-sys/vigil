@@ -1,0 +1,28 @@
+{
+  "model": "yolov8n.pt",
+  "dataset": "coco128.yaml",
+  "conf": 0.25,
+  "imgsz": 640,
+  "iou_match": 0.5,
+  "device": "cpu",
+  "vigil_pipeline": {
+    "images": 128,
+    "total_gt": 929,
+    "classes_with_gt": 71,
+    "tp": 465,
+    "fp": 177,
+    "fn": 464,
+    "precision": 0.7243,
+    "recall": 0.5005,
+    "f1": 0.592,
+    "mAP@0.5": 0.4875,
+    "mean_latency_ms": 80.05,
+    "fps": 12.49
+  },
+  "ultralytics_official": {
+    "mAP@0.5": 0.4682,
+    "mAP@0.5:0.95": 0.3644,
+    "precision": 0.6779,
+    "recall": 0.4995
+  }
+}
